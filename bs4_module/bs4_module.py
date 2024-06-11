@@ -1,8 +1,10 @@
-from jsearch import BeautifulSoup, os, requests
-from regex_modules import regex_modules
-from urllib.parse import urlparse
-from requests_module import requests_module
+import os
 import re
+from urllib.parse import urlparse
+import requests
+from bs4 import BeautifulSoup
+from regex_modules import regex_modules
+from requests_module import requests_module
 from utils_module import colors
 
 class CoreParser():
@@ -33,27 +35,21 @@ class CoreParser():
         else:
             self.urls.append(src_tags)
 
-            
     def get_content_js(self):
-        
         test_conn = requests_module.CoreRequests(self.url_domain, self.name_target)
         if test_conn:
             current_dir = os.getcwd()
             path_save = ""
-            #parsing_dir_name
-            dir_name = urlparse(self.url_domain)
-            dir_name = dir_name.hostname
-            #dir_name = dir_name.hostname.replace(".", "_", -1)
+            dir_name = urlparse(self.url_domain).hostname
         else:
             print(f"{self.url_domain} maybe down :/ ?")
 
         try:
             os.mkdir(str(dir_name))
             print(f">> Create directory {dir_name}")
-            print(f">> Files will be save at {dir_name}")
+            print(f">> Files will be saved at {dir_name}")
         except FileExistsError as e:
             print(f">> {e}")
-        
         
         for url_src_tag in self.urls:
             arrays_match = []
@@ -71,7 +67,6 @@ class CoreParser():
                                 continue
                             else:
                                 arrays_match.append(v) 
-                
                 for url in arrays_match:
                     if "aws" in url:
                         print(colors.colors.fg.red + f"[AWS INFO] {url}" + colors.colors.reset)
@@ -84,28 +79,23 @@ class CoreParser():
                     else:
                         print(colors.colors.fg.blue + f"[INFO URL] {url}" + colors.colors.reset)
                     
-                         
-
             except ConnectionError as e:
                 print(f">> Error while save content from \n{url_src_tag} \n {e}")
 
             try:
-                name_save_url_tag = url_src_tag.replace(".", "_")
-                name_save_url_tag = name_save_url_tag.replace("//", "_")
-                name_save_url_tag = name_save_url_tag.replace("/", "_")[0:10]
-                path_save = current_dir+"/"+dir_name+"/"+name_save_url_tag
+                # Extract the filename from the URL
+                filename = url_src_tag.split('/')[-1]
 
-                with open(path_save+".js",'wb') as f:
+                # Construct the path to save the file within the generated folder
+                path_save = os.path.join(current_dir, dir_name, filename)
+
+                with open(path_save, 'wb') as f:
                     f.write(content_save)
 
             except FileNotFoundError as e:
                 print(f">> Error while saving JS content to parse \n {e}")
-        
     
     def find_all_script(self):
         for tag in self.soup.find_all("script"):
             if tag.get('src'):
-                #print(tag.get('src'))
                 self.parser_url(tag.get('src'))
-            
-    
